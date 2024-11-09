@@ -87,13 +87,16 @@ ggplot(combined, aes(x = month)) +
                           
 #higher unemployment earlier of the year, lower at the end of the year; unemployment in 2024 is on par with non-pandemic year 
 gg_season(analysis_rdy_tsibble, unemployment_r)
+gg_subseries(analysis_rdy_tsibble, unemployment_r)
+
 
 #no clear trend in stock performance  M-o-M. Market is at an all tiome high and continue growing 
 #I changed the color scale because this is just slightly easier to see compare to the default.
 gg_season(analysis_rdy_tsibble, SPY.Adjusted, pal = (scales::viridis_pal())(9))
+gg_subseries(analysis_rdy_tsibble,  SPY.Adjusted)
 ## Including Plots
 
-
+##Foundation done. Now look for a company then forcast the industry performance.
         
 ```
 
