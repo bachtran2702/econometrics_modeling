@@ -78,21 +78,23 @@ summary(data_no_date)
 ```
 
 ```{r trend visualization, echo=FALSE}
-analysis_rdy_tsibble%>%
-  autoplot.zoo(unemployment_r)
-```
+#as time series
 
+ggplot(combined, aes(x = month)) +
+    geom_line(aes(y = unemployment_r), color = "#ED3833") +
+    geom_line(aes(y = fed_fund_r), color ="#073D7F") +
+    labs(y = "Price ", x = "Year" )
+                          
+#higher unemployment earlier of the year, lower at the end of the year; unemployment in 2024 is on par with non-pandemic year 
+gg_season(analysis_rdy_tsibble, unemployment_r)
 
+#no clear trend in stock performance  M-o-M. Market is at an all tiome high and continue growing 
+#I changed the color scale because this is just slightly easier to see compare to the default.
+gg_season(analysis_rdy_tsibble, SPY.Adjusted, pal = (scales::viridis_pal())(9))
 ## Including Plots
 
-You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-ggplot(data, aes(x = Index)) +
-    geom_line(aes(y = jnj_adj), color = "#ED3833") +
-    geom_line(aes(y = spy_adj), color ="#073D7F") +
-    labs(y = "Price ", x = "Year" )
-                                              
+        
 ```
 
 
