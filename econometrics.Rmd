@@ -10,11 +10,18 @@ library(dplyr)
 library(stats)
 library(tidyr)
 library(tseries) 
-library(TTR) 
-library(forecast) 
+library(TTR)
+library(zoo)
+library(forecast)
+library(lubridate)
 library(car) 
 library(ggplot2)
 library(quantmod)
+library(tsibble)
+library(xts)
+library(tibble)
+library(fpp2)
+
 ```
 
 ## R Markdown
@@ -24,30 +31,57 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
 
-```{r data, echo = T}
-data = read.csv("base_model_data.csv")
-
-as_tsibble(data, key = DATE)
+```{r macro data, echo = T}
+#wrestle the data from chr type "%m/%d/%y" data to zoo type year month 
+dta = read.csv("base_model_dta.csv", col.names = c("month", "unemployment_r", "fed_fund_r", "consumer_sent")) %>%
+  mutate(month = as.character(
+    as.Date(month, format = "%m/%d/%y"))
+  ) %>%
+  mutate(month = yearmonth(month))
 ```
 
-```{r data}
-#date parameter
-start = 
-end = Sys.Date()
+```{r sp500 performance data, echo =T}
+#subset period
+start = "2018-09-01"
+end = "2024-10-31"
 
-# Pull stock data
-# Assign SPY data to 'spy' using auto.assign argument
-spy = getSymbols("SPY", auto.assign = F, from = "2019-01-01") 
-
-# Assign JNJ data to 'jnj' using env argument
-jnj = getSymbols("JNJ", auto.assign = F, from = "2019-01-01")
+# Assign SPY data to 'spy' 
+spy = getSymbols("SPY", auto.assign = F, from = start, to = end)
 
 #Extract adjusted close
-spy_adj = Ad(spy)
-jnj_adj = Ad(jnj)
+spy_adj = Ad(spy) 
+monthly_spy_adj = apply.monthly(spy_adj, FUN = mean)
 
-data = cbind.xts(spy_adj, jnj_adj) 
+#convert xts to data frame
+spy_df = as.data.frame(monthly_spy_adj) %>%
+  rownames_to_column(var = "month")
+#wrestle the data to year month
+spy_df = spy_df%>%
+  mutate(month = yearmonth(month))
 ```
+
+
+```{r tsible, echo=FALSE}
+combined = merge(dta, spy_df)
+
+analysis_rdy_tsibble = combined%>%
+  as_tsibble(index = month)
+
+```
+
+
+```{r descriptive stats, echo=FALSE}
+data_no_date = combined%>%
+  select(-month)
+
+summary(data_no_date)
+```
+
+```{r trend visualization, echo=FALSE}
+analysis_rdy_tsibble%>%
+  autoplot.zoo(unemployment_r)
+```
+
 
 ## Including Plots
 
@@ -60,12 +94,12 @@ ggplot(data, aes(x = Index)) +
     labs(y = "Price ", x = "Year" )
                                               
 ```
+
+
+
+
+
 ## Including Plots
 
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
