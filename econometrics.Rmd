@@ -23,10 +23,43 @@ This is an R Markdown document. Markdown is a simple formatting syntax for autho
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
 
-```{r cars}
-summary(cars)
+
+```{r data, echo = T}
+data = read.csv("base_model_data.csv")
+
+as_tsibble(data, key = DATE)
 ```
 
+```{r data}
+#date parameter
+start = 
+end = Sys.Date()
+
+# Pull stock data
+# Assign SPY data to 'spy' using auto.assign argument
+spy = getSymbols("SPY", auto.assign = F, from = "2019-01-01") 
+
+# Assign JNJ data to 'jnj' using env argument
+jnj = getSymbols("JNJ", auto.assign = F, from = "2019-01-01")
+
+#Extract adjusted close
+spy_adj = Ad(spy)
+jnj_adj = Ad(jnj)
+
+data = cbind.xts(spy_adj, jnj_adj) 
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+ggplot(data, aes(x = Index)) +
+    geom_line(aes(y = jnj_adj), color = "#ED3833") +
+    geom_line(aes(y = spy_adj), color ="#073D7F") +
+    labs(y = "Price ", x = "Year" )
+                                              
+```
 ## Including Plots
 
 You can also embed plots, for example:
