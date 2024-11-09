@@ -7,6 +7,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(dplyr)
+library(PerformanceAnalytics)
 library(stats)
 library(tidyr)
 library(tseries) 
@@ -20,7 +21,7 @@ library(quantmod)
 library(tsibble)
 library(xts)
 library(tibble)
-library(fpp2)
+library(fpp3)
 
 ```
 
@@ -66,19 +67,12 @@ combined = merge(dta, spy_df)
 
 analysis_rdy_tsibble = combined%>%
   as_tsibble(index = month)
-
-```
-
-
-```{r descriptive stats, echo=FALSE}
-data_no_date = combined%>%
-  select(-month)
-
-summary(data_no_date)
 ```
 
 ```{r trend visualization, echo=FALSE}
 #as time series
+library("PerformanceAnalytics")
+
 
 ggplot(combined, aes(x = month)) +
     geom_line(aes(y = unemployment_r), color = "#ED3833") +
@@ -94,10 +88,41 @@ gg_subseries(analysis_rdy_tsibble, unemployment_r)
 #I changed the color scale because this is just slightly easier to see compare to the default.
 gg_season(analysis_rdy_tsibble, SPY.Adjusted, pal = (scales::viridis_pal())(9))
 gg_subseries(analysis_rdy_tsibble,  SPY.Adjusted)
-## Including Plots
 
-##Foundation done. Now look for a company then forcast the industry performance.
+#model fit a model to predict consumer sentiment for October
+fit_csi = lm(consumer_sent ~ unemployment_r + fed_fund_r + SPY.Adjusted + month + fed_fund_r:SPY.Adjusted, data = analysis_rdy_tsibble)
+summary(fit_csi)
+
+oct_data = tibble(unemployment_r = 3.9, fed_fund_r =4.83, SPY.Adjusted = 577.7850, 
+                       month = yearmonth("2024-10"))
+imputed_data = as.numeric(predict(fit_csi, oct_data))
+
+#impute the missing October data
+analysis_rdy_tsibble = analysis_rdy_tsibble %>%
+  replace_na(list(consumer_sent = imputed_data))
+tail(analysis_rdy_tsibble, n = 1)
+```
+
+```{r trend visualization, echo=FALSE}
+#descriptive data
+data_no_date = analysis_rdy_tsibble%>%
+  as_tibble()%>%
+  select(-month)
+cor_matrix = chart.Correlation(data_no_date)
+
+#find lambda to normalize data
+analysis_rdy_tsibble%>% BoxCox.lambda(unemployment_r)
+
+#normalize data
+#Foundation done. Now look for a company then forecast the industry performance.
         
+```
+
+```{r descriptive stats, echo=FALSE}
+data_no_date = combined%>%
+  select(-month)
+
+summary(data_no_date)
 ```
 
 
