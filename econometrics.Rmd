@@ -118,27 +118,19 @@ analysis_rdy_tsibble = analysis_rdy_tsibble %>%
 tail(analysis_rdy_tsibble, n = 1)
 ```
 
-```{r trend visualization, echo=FALSE}
+```{r descriptive stats, echo=FALSE}
 #descriptive data
 data_no_date = analysis_rdy_tsibble%>%
   as_tibble()%>%
   select(-month)
 cor_matrix = chart.Correlation(data_no_date)
 
-
+summary(data_no_date)
 
 #normalize data
 #Foundation done. Now look for a company then forecast the industry performance.
         
 ```
-
-```{r descriptive stats, echo=FALSE}
-data_no_date = combined%>%
-  select(-month)
-
-summary(data_no_date)
-```
-
 
 ```{r forecast SP500, echo=FALSE}
 #base model: 
