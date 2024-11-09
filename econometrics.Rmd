@@ -88,7 +88,8 @@ gg_subseries(analysis_rdy_tsibble, unemployment_r)
 #I changed the color scale because this is just slightly easier to see compare to the default.
 gg_season(analysis_rdy_tsibble, SPY.Adjusted, pal = (scales::viridis_pal())(9))
 gg_subseries(analysis_rdy_tsibble,  SPY.Adjusted)
-
+```
+```{r impute model, echo=FALSE}
 #model fit a model to predict consumer sentiment for October
 fit_csi = lm(consumer_sent ~ unemployment_r + fed_fund_r + SPY.Adjusted + month + fed_fund_r:SPY.Adjusted, data = analysis_rdy_tsibble)
 summary(fit_csi)
@@ -97,6 +98,20 @@ oct_data = tibble(unemployment_r = 3.9, fed_fund_r =4.83, SPY.Adjusted = 577.785
                        month = yearmonth("2024-10"))
 imputed_data = as.numeric(predict(fit_csi, oct_data))
 
+#linear model assumptions check
+# pass the residuals of linear regression model
+res = resid(fit_csi) 
+# residual plot 
+plot(fit_csi,1)
+# QQ plot
+plot(fit_csi,2)
+# scale-location-plot
+plot(fit_csi,3)
+# stats test. Since p-value > 0.05, residuals arae normally distributed
+shapiro.test(residuals(fit_csi)) 
+```
+
+```{r impute data, echo=FALSE}  
 #impute the missing October data
 analysis_rdy_tsibble = analysis_rdy_tsibble %>%
   replace_na(list(consumer_sent = imputed_data))
@@ -110,8 +125,7 @@ data_no_date = analysis_rdy_tsibble%>%
   select(-month)
 cor_matrix = chart.Correlation(data_no_date)
 
-#find lambda to normalize data
-analysis_rdy_tsibble%>% BoxCox.lambda(unemployment_r)
+
 
 #normalize data
 #Foundation done. Now look for a company then forecast the industry performance.
@@ -126,6 +140,38 @@ summary(data_no_date)
 ```
 
 
+```{r forecast SP500, echo=FALSE}
+#base model: 
+fit = auto.arima(analysis_rdy_tsibble$SPY.Adjusted)
+summary(fit)
+
+#model 2
+fit2 = auto.arima(analysis_rdy_tsibble$SPY.Adjusted, stepwise = F)
+summary(fit2)
+fit2%>%
+  forecast(h=12)%>% autoplot()
+
+#model 3
+#regressors matrix
+xreg = cbind(fed_fund_r = as.numeric(unlist(analysis_rdy_tsibble[,"fed_fund_r"])),
+             unemployment_r= as.numeric(unlist(analysis_rdy_tsibble[,"unemployment_r"])),
+             consumer_sent = as.numeric(unlist(analysis_rdy_tsibble[,"consumer_sent"])))
+
+fit_sp = auto.arima(analysis_rdy_tsibble[,"SPY.Adjusted"], xreg = xreg)
+summary(fit_sp)
+
+
+# Use model 3 because it performs best
+csi_model = auto.arima(analysis_rdy_tsibble[,"consumer_sent"], stepwise = F) #AIC is high, lard se bands, more uncertainty
+csi_model %>%
+  forecast(h=12)%>%
+  autoplot()
+
+# flat lining rate at 3%, consumer sentiment is from 70 to 80 with an increase of 1 monthly
+forcasted_stock = forecast(fit_sp, xreg = cbind(fed_fund_r = rep(3,12), unemployment_r= rep(4,12),consumer_sent =seq(70,82,1)))%>%
+  autoplot()%>%
+  summary()
+```
 
 
 
