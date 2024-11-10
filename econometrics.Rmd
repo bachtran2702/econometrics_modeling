@@ -22,6 +22,7 @@ library(tsibble)
 library(xts)
 library(tibble)
 library(fpp3)
+library(extrafont)
 
 ```
 
@@ -140,8 +141,7 @@ summary(fit)
 #model 2
 fit2 = auto.arima(analysis_rdy_tsibble$SPY.Adjusted, stepwise = F)
 summary(fit2)
-fit2%>%
-  forecast(h=12)%>% autoplot()
+fit2%>%forecast(h=12)%>% autoplot()
 
 #model 3
 #regressors matrix
@@ -153,16 +153,44 @@ fit_sp = auto.arima(analysis_rdy_tsibble[,"SPY.Adjusted"], xreg = xreg)
 summary(fit_sp)
 
 
-# Use model 3 because it performs best
-csi_model = auto.arima(analysis_rdy_tsibble[,"consumer_sent"], stepwise = F) #AIC is high, lard se bands, more uncertainty
+# Use model 3 because it performs best.sasumptions for final model
+csi_model = auto.arima(analysis_rdy_tsibble[,"consumer_sent"], stepwise = F) #AIC is high, large se bands, more uncertainty
 csi_model %>%
   forecast(h=12)%>%
   autoplot()
 
 # flat lining rate at 3%, consumer sentiment is from 70 to 80 with an increase of 1 monthly
-forcasted_stock = forecast(fit_sp, xreg = cbind(fed_fund_r = rep(3,12), unemployment_r= rep(4,12),consumer_sent =seq(70,82,1)))%>%
-  autoplot()%>%
-  summary()
+new_data = cbind( fed_fund_r = rep(4.6,12), 
+                  unemployment_r= rep(3.8,12),
+                  consumer_sent =seq(70,94,2))
+fc = forecast(fit_sp, xreg = new_data)
+```
+
+```{r forecast model vis, echo=FALSE}
+#month
+b = analysis_rdy_tsibble%>%
+  select(month)
+historicalmonth = as.ts(b)
+
+forecastmonth = as.ts(yearmonth(c("2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10")))
+
+monthall = rbind(historicalmonth, forecastmonth)
+
+autoplot(forcasted_stock) + aes(color = "#ED3833") +
+  scale_x_yearmonth(labels = monthall) +
+  ylim(200,800) +
+  ggtitle("S&P 500 Performance")+
+  labs(x= "", y = "Dollars") +
+    #positions of title
+  theme(text=element_text(family="Calibri"),
+        legend.position="none",
+        plot.title = element_text(hjust = 0.5),
+        panel.grid.major.y = element_line(color = "#DDD9C3"),
+        panel.grid.minor.y = element_line(color = "#DDD9C3"),
+   #remove background and tick marks
+        panel.background = element_blank(),
+        axis.ticks.y = element_blank() 
+   )                                           
 ```
 
 
