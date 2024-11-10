@@ -149,11 +149,12 @@ xreg = cbind(fed_fund_r = as.numeric(unlist(analysis_rdy_tsibble[,"fed_fund_r"])
              unemployment_r= as.numeric(unlist(analysis_rdy_tsibble[,"unemployment_r"])),
              consumer_sent = as.numeric(unlist(analysis_rdy_tsibble[,"consumer_sent"])))
 
-fit_sp = auto.arima(analysis_rdy_tsibble[,"SPY.Adjusted"], xreg = xreg)
+fit_sp = auto.arima(analysis_rdy_tsibble[,"SPY.Adjusted"], xreg = xreg, stepwise = F)
 summary(fit_sp)
+analysis_rdy_tsibble%>%
+  gg_tsdisplay(SPY.Adjusted)
 
-
-# Use model 3 because it performs best.sasumptions for final model
+# Use model 3 because it performs best.assumptions for final model
 csi_model = auto.arima(analysis_rdy_tsibble[,"consumer_sent"], stepwise = F) #AIC is high, large se bands, more uncertainty
 csi_model %>%
   forecast(h=12)%>%
@@ -163,34 +164,40 @@ csi_model %>%
 new_data = cbind( fed_fund_r = rep(4.6,12), 
                   unemployment_r= rep(3.8,12),
                   consumer_sent =seq(70,94,2))
-fc = forecast(fit_sp, xreg = new_data)
+fc = forecast.StructTS(fit_sp, xreg = new_data)
+checkresiduals(fc)
+
 ```
 
 ```{r forecast model vis, echo=FALSE}
-#month
-b = analysis_rdy_tsibble%>%
-  select(month)
-historicalmonth = as.ts(b)
 
-forecastmonth = as.ts(yearmonth(c("2024-11","2024-12","2025-01","2025-02","2025-03","2025-04","2025-05","2025-06","2025-07","2025-08","2025-09","2025-10")))
+# coerce POSIXct/Dates to yearmonth
+x <- seq(as.Date("2018-09-01"), as.Date("2024-10-1"), by = "1 month")
+yearmonth(x)
 
-monthall = rbind(historicalmonth, forecastmonth)
-
-autoplot(forcasted_stock) + aes(color = "#ED3833") +
-  scale_x_yearmonth(labels = monthall) +
+fc %>%
+gg_tsdisplay(fc) + aes(color = "#ED3833") +
   ylim(200,800) +
   ggtitle("S&P 500 Performance")+
   labs(x= "", y = "Dollars") +
     #positions of title
   theme(text=element_text(family="Calibri"),
-        legend.position="none",
         plot.title = element_text(hjust = 0.5),
         panel.grid.major.y = element_line(color = "#DDD9C3"),
-        panel.grid.minor.y = element_line(color = "#DDD9C3"),
+        panel.grid.minor.y = element_line(color = "#DDD9C3"))  +
+  theme(panel.background = element_blank(),
    #remove background and tick marks
-        panel.background = element_blank(),
-        axis.ticks.y = element_blank() 
-   )                                           
+        axis.ticks.y = element_blank(),
+        axis.line = element_line(color = "black", size = 1, linetype = "solid"),
+   #legend
+        legend.position= c(0.1,0.7),
+        legend.direction='vertical',
+        legend.box.background = element_rect(color="black", size = 0.65)) +
+    #scales
+        scale_y_continuous(n.breaks = 5)
+
+scale_y_yearmonth()
+continuous(n.breaks = 20)
 ```
 
 
