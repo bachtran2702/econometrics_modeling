@@ -149,14 +149,14 @@ xreg = cbind(fed_fund_r = as.numeric(unlist(analysis_rdy_tsibble[,"fed_fund_r"])
              unemployment_r= as.numeric(unlist(analysis_rdy_tsibble[,"unemployment_r"])),
              consumer_sent = as.numeric(unlist(analysis_rdy_tsibble[,"consumer_sent"])))
 
-fit_sp = auto.arima(analysis_rdy_tsibble[,"SPY.Adjusted"], xreg = xreg, stepwise = F,seasonal = T)
+fit_sp = auto.arima(analysis_rdy_tsibble[,"SPY.Adjusted"], xreg = xreg, stepwise = T,seasonal = F)
 
 summary(fit_sp)
 analysis_rdy_tsibble%>%
   gg_tsdisplay(SPY.Adjusted)
 
 # Use model 3 because it performs best.assumptions for final model
-csi_model = auto.arima(analysis_rdy_tsibble[,"consumer_sent"], stepwise = F) #AIC is high, large se bands, more uncertainty. Therefore:
+csi_model = auto.arima(analysis_rdy_tsibble[,"consumer_sent"], stepwise = T) #AIC is high, large se bands, more uncertainty. Therefore:
 
 # flat lining rate at 3% fed fund r, consumer sentiment is from 70 to 80 with an increase of 2 monthly based on market reaction toward political events
 new_data = cbind( fed_fund_r = rep(4.6,12), 
@@ -173,19 +173,18 @@ checkresiduals(fc)
 
 ```{r forecast model vis, echo=FALSE, warning = F}
 #fix date index
-month_index = as.ts(seq(as.Date("2018-09-01"), as.Date("2025-10-1"), by = "1 month"))
-month_index_list = as.list(month_index)
+month_index_historical = seq(as.Date("2018-09-01"), as.Date("2024-10-1"), by = "1 month")
+month_index_forecasted = seq(as.Date("2024-11-1"), as.Date("2028-1-1"), by = "1 month")
 
-#Unused code
-plot_model = fc
-plot_model["x"] = as.list(month_index)
 
 #"S&P 500 Performance
-autoplot(fc) + aes(color = "#ED3833", labels = "Historical Data") +
+vis_model =autoplot(fc) 
+
+vis_model + aes(color = "#ED3833", labels = "Historical Data") +
   ylim(200,800) +
   #scales
   scale_y_continuous(n.breaks = 10) +
-  labs(x= "", y = "Dollars", caption = "Time Index: 1 = September 2018 ") +
+  labs(x= "Monthly Data", y = "Dollars", caption = "Time Index: 1 = September 2018. Usage of SPDR's S&P 500 Trust ETF because scale and better fit") +
     #positions of title
   theme(text=element_text(family="Calibri"),
         plot.title = element_blank(),
@@ -195,11 +194,17 @@ autoplot(fc) + aes(color = "#ED3833", labels = "Historical Data") +
   theme(panel.grid.major.y = element_line(color = "#DDD9C3"),
         panel.background = element_blank())  +
     
-    #remove background and tick marks and leend
+    #remove background and tick marks and legend
   theme(axis.ticks.y = element_blank(),
         axis.line = element_line(color = "black", size = 0.75, linetype = "solid"),
-        legend.position = "none")
+        legend.position = "none") +
+  #start period
+  annotate(geom = "point", x = 75, y = 575.7267, colour = "red", size = 1.5) +
+  annotate(geom = "text", x = 75, y = 575.7267, label = "$575.73", hjust = 1.2, size = 3.3) +
+  annotate(geom = "point", x = 87, y = 658.7358, colour = "red", size = 1.5) +
+  annotate(geom = "text", x = 87, y = 658.7358, label = "$658.74", vjust = -1.8, size = 3.3) 
 
+ 
 ```
 
 
