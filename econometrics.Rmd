@@ -149,55 +149,59 @@ xreg = cbind(fed_fund_r = as.numeric(unlist(analysis_rdy_tsibble[,"fed_fund_r"])
              unemployment_r= as.numeric(unlist(analysis_rdy_tsibble[,"unemployment_r"])),
              consumer_sent = as.numeric(unlist(analysis_rdy_tsibble[,"consumer_sent"])))
 
-fit_sp = auto.arima(analysis_rdy_tsibble[,"SPY.Adjusted"], xreg = xreg, stepwise = F)
+fit_sp = auto.arima(analysis_rdy_tsibble[,"SPY.Adjusted"], xreg = xreg, stepwise = F,seasonal = T)
+
 summary(fit_sp)
 analysis_rdy_tsibble%>%
   gg_tsdisplay(SPY.Adjusted)
 
 # Use model 3 because it performs best.assumptions for final model
-csi_model = auto.arima(analysis_rdy_tsibble[,"consumer_sent"], stepwise = F) #AIC is high, large se bands, more uncertainty
-csi_model %>%
-  forecast(h=12)%>%
-  autoplot()
+csi_model = auto.arima(analysis_rdy_tsibble[,"consumer_sent"], stepwise = F) #AIC is high, large se bands, more uncertainty. Therefore:
 
-# flat lining rate at 3%, consumer sentiment is from 70 to 80 with an increase of 1 monthly
+# flat lining rate at 3% fed fund r, consumer sentiment is from 70 to 80 with an increase of 2 monthly based on market reaction toward political events
 new_data = cbind( fed_fund_r = rep(4.6,12), 
                   unemployment_r= rep(3.8,12),
                   consumer_sent =seq(70,94,2))
-fc = forecast.StructTS(fit_sp, xreg = new_data)
+
+#forecast
+fc = forecast(fit_sp, xreg = new_data,h = 12)
+
 checkresiduals(fc)
 
 ```
 
-```{r forecast model vis, echo=FALSE}
 
-# coerce POSIXct/Dates to yearmonth
-x <- seq(as.Date("2018-09-01"), as.Date("2024-10-1"), by = "1 month")
-yearmonth(x)
+```{r forecast model vis, echo=FALSE, warning = F}
+#fix date index
+month_index = as.ts(seq(as.Date("2018-09-01"), as.Date("2024-10-1"), by = "1 month"))
+month_index_list = as.list(month_index)
 
-fc %>%
-gg_tsdisplay(fc) + aes(color = "#ED3833") +
+plot_model = fc
+
+  
+fc["plot_model"] = as.list(month_index)
+
+autoplot(fc) + aes(color = "#ED3833", labels = "Historical Data") +
   ylim(200,800) +
+  #scales
+  scale_y_continuous(n.breaks = 10) +
   ggtitle("S&P 500 Performance")+
-  labs(x= "", y = "Dollars") +
+  labs(x= "", y = "Dollars", caption = "Time Index September 2018 = 1") +
     #positions of title
   theme(text=element_text(family="Calibri"),
         plot.title = element_text(hjust = 0.5),
-        panel.grid.major.y = element_line(color = "#DDD9C3"),
-        panel.grid.minor.y = element_line(color = "#DDD9C3"))  +
-  theme(panel.background = element_blank(),
-   #remove background and tick marks
-        axis.ticks.y = element_blank(),
+    #plot caption
+        plot.caption.position =  "plot",
+        plot.caption = element_text(hjust = 0)) +
+  theme(panel.grid.major.y = element_line(color = "#DDD9C3"),
+        panel.grid.minor.y = element_line(color = "#DDD9C3"),
+        panel.background = element_blank())  +
+    
+    #remove background and tick marks and leend
+  theme(axis.ticks.y = element_blank(),
         axis.line = element_line(color = "black", size = 1, linetype = "solid"),
-   #legend
-        legend.position= c(0.1,0.7),
-        legend.direction='vertical',
-        legend.box.background = element_rect(color="black", size = 0.65)) +
-    #scales
-        scale_y_continuous(n.breaks = 5)
+        legend.position = "none")
 
-scale_y_yearmonth()
-continuous(n.breaks = 20)
 ```
 
 
