@@ -173,33 +173,31 @@ checkresiduals(fc)
 
 ```{r forecast model vis, echo=FALSE, warning = F}
 #fix date index
-month_index = as.ts(seq(as.Date("2018-09-01"), as.Date("2024-10-1"), by = "1 month"))
+month_index = as.ts(seq(as.Date("2018-09-01"), as.Date("2025-10-1"), by = "1 month"))
 month_index_list = as.list(month_index)
 
+#Unused code
 plot_model = fc
+plot_model["x"] = as.list(month_index)
 
-  
-fc["plot_model"] = as.list(month_index)
-
+#"S&P 500 Performance
 autoplot(fc) + aes(color = "#ED3833", labels = "Historical Data") +
   ylim(200,800) +
   #scales
   scale_y_continuous(n.breaks = 10) +
-  ggtitle("S&P 500 Performance")+
-  labs(x= "", y = "Dollars", caption = "Time Index September 2018 = 1") +
+  labs(x= "", y = "Dollars", caption = "Time Index: 1 = September 2018 ") +
     #positions of title
   theme(text=element_text(family="Calibri"),
-        plot.title = element_text(hjust = 0.5),
+        plot.title = element_blank(),
     #plot caption
         plot.caption.position =  "plot",
         plot.caption = element_text(hjust = 0)) +
   theme(panel.grid.major.y = element_line(color = "#DDD9C3"),
-        panel.grid.minor.y = element_line(color = "#DDD9C3"),
         panel.background = element_blank())  +
     
     #remove background and tick marks and leend
   theme(axis.ticks.y = element_blank(),
-        axis.line = element_line(color = "black", size = 1, linetype = "solid"),
+        axis.line = element_line(color = "black", size = 0.75, linetype = "solid"),
         legend.position = "none")
 
 ```
