@@ -7,13 +7,13 @@ output: html_document
 
 ```{r setup, include=FALSE}
 library(dplyr)
+library(forecast)
 library(PerformanceAnalytics)
 library(stats)
 library(tidyr)
 library(tseries) 
 library(TTR)
 library(zoo)
-library(forecast)
 library(lubridate)
 library(car) 
 library(ggplot2)
@@ -36,21 +36,70 @@ When you click the **Knit** button a document will be generated that includes bo
 ```{r macro data, echo = T}
 #wrestle the data from chr type "%m/%d/%y" data to zoo type year month 
 dta = read.csv("employment_dta.csv", col.names = c("month", "retail_trade_employment", "all_employment")) %>%
-  mutate(month = yearmonth(
-    as.Date(month, format = "%m/%d/%y"))
-  ) %>%
-  mutate(month = yearmonth(month))
-as_tsibble(dta)
+  mutate(month = yearmonth(as.Date(month, format = "%m/%d/%y"))) %>%
+  mutate(retail_trade_employment = as.numeric(retail_trade_employment),
+         all_employment = as.numeric(all_employment))%>%
+  as_tsibble()
+
+retail_trade_employment_ts = ts(dta$retail_trade_employment, frequency = 12, start =c(2000,1))
+all_employment_ts = ts(dta$all_employment, frequency = 12, start = c(2000,1))
+```
+
+
+```{ r colr pallet, echo = T}
+c25 <- c(
+  "dodgerblue2", "#E31A1C", # red
+  "green4",
+  "#6A3D9A", # purple
+  "#FF7F00", # orange
+  "black", "gold1",
+  "skyblue2", "#FB9A99", # lt pink
+  "palegreen2",
+  "#CAB2D6", # lt purple
+  "#FDBF6F", # lt orange
+  "gray70", "khaki2",
+  "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
+  "darkturquoise", "green1", "yellow4", "yellow3",
+  "darkorange4", "brown"
+)
+
+```
+
+
+```{r trend vis, echo =T}
+ggAcf(retail_trade_employment_ts)
+ggseasonplot(retail_trade_employment_ts) 
+ 
+dta %>% 
+  gg_subseries(retail_trade_employment) +
+  labs(
+    y = "Thousands of Persons",
+    title = " All Employees: Retail Trade in the United States"
+  )
+
+ggAcf(all_employment_ts)
+ggseasonplot(all_employment_ts) 
+dta %>%
+  gg_subseries(all_employment_ts) +
+    labs(
+    y = "Thousands of Persons",
+    title = " All non-farm employees in California"
+  ) + 
+  scale_fill_gradient()
 ```
 
 ```{r sp500 performance data, echo =T}
-#model 2
-fit_1 = wh
 
+autoplot(dta)
+
+#model 2
+fit_1 = forecast::hw(retail_trade_employment_ts)
          #retail_trade_employment = retail_trade_employment * 1000,
          #all_employment = all_employment*1000)
-fc1 = forecast(fit1, h =12)
+autoplot(fit_1)
+fc1 = forecast(fit_1, h =24)
 autoplot(fc1)
+air <- window(ausair, start = 1990)
 ```
 
 ## R Markdown
