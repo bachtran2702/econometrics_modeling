@@ -1,0 +1,74 @@
+---
+title: "employment"
+author: "Bach Tran"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(dplyr)
+library(PerformanceAnalytics)
+library(stats)
+library(tidyr)
+library(tseries) 
+library(TTR)
+library(zoo)
+library(forecast)
+library(lubridate)
+library(car) 
+library(ggplot2)
+library(quantmod)
+library(tsibble)
+library(xts)
+library(tibble)
+library(fpp3)
+library(extrafont)
+
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+
+```{r macro data, echo = T}
+#wrestle the data from chr type "%m/%d/%y" data to zoo type year month 
+dta = read.csv("employment_dta.csv", col.names = c("month", "retail_trade_employment", "all_employment")) %>%
+  mutate(month = yearmonth(
+    as.Date(month, format = "%m/%d/%y"))
+  ) %>%
+  mutate(month = yearmonth(month))
+as_tsibble(dta)
+```
+
+```{r sp500 performance data, echo =T}
+#model 2
+fit_1 = wh
+
+         #retail_trade_employment = retail_trade_employment * 1000,
+         #all_employment = all_employment*1000)
+fc1 = forecast(fit1, h =12)
+autoplot(fc1)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
