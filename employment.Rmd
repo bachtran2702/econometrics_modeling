@@ -93,7 +93,7 @@ final_model_vis = autoplot(final_model) + aes(color = "#ED3833", labels = "Histo
   scale_x_yearmon(n = 10) +
   labs(x= "", 
        y = "Employees (1000)", 
-       subtitle = "Employment for retail trade is expected to peak at around 16.1 million employees each year.\nPositive trend and less volatile seasonality as time progress",
+       subtitle = "Employment for retail trade is expected to peak at around 16.1 million employees each year.\nPositive trend and slightly less volatile seasonality as time progresses",
        caption = "Forecasted using ARIMA(0,1,2)(2,1,0)[12] model. Data Retreived from FRED (CEU4200000001) on Nov 01, 2024") +
     #positions of title
   theme(text=element_text(family="Calibri"),
