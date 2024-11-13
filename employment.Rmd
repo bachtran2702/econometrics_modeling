@@ -45,27 +45,6 @@ retail_trade_employment_ts = ts(dta$retail_trade_employment, frequency = 12, sta
 all_employment_ts = ts(dta$all_employment, frequency = 12, start = c(2000,1))
 ```
 
-
-```{ r colr pallet, echo = T}
-c25 <- c(
-  "dodgerblue2", "#E31A1C", # red
-  "green4",
-  "#6A3D9A", # purple
-  "#FF7F00", # orange
-  "black", "gold1",
-  "skyblue2", "#FB9A99", # lt pink
-  "palegreen2",
-  "#CAB2D6", # lt purple
-  "#FDBF6F", # lt orange
-  "gray70", "khaki2",
-  "maroon", "orchid1", "deeppink1", "blue1", "steelblue4",
-  "darkturquoise", "green1", "yellow4", "yellow3",
-  "darkorange4", "brown"
-)
-
-```
-
-
 ```{r trend vis, echo =T}
 ggAcf(retail_trade_employment_ts)
 ggseasonplot(retail_trade_employment_ts) 
@@ -80,37 +59,111 @@ dta %>%
 ggAcf(all_employment_ts)
 ggseasonplot(all_employment_ts) 
 dta %>%
-  gg_subseries(all_employment_ts) +
+  gg_subseries(all_employment) +
     labs(
     y = "Thousands of Persons",
     title = " All non-farm employees in California"
-  ) + 
-  scale_fill_gradient()
+  ) 
 ```
 
-```{r sp500 performance data, echo =T}
-
-autoplot(dta)
-
+```{r retail trade forecast data, echo =T}
 #model 2
-fit_1 = forecast::hw(retail_trade_employment_ts)
-         #retail_trade_employment = retail_trade_employment * 1000,
-         #all_employment = all_employment*1000)
-autoplot(fit_1)
-fc1 = forecast(fit_1, h =24)
-autoplot(fc1)
-air <- window(ausair, start = 1990)
+fit_1_rt = forecast::hw(retail_trade_employment_ts, seasonal = "multiplicative", damped =T, h = 36)
+fit_2_rt = forecast::hw(retail_trade_employment_ts, seasonal = "additive", damped = T, h = 36)
+fit_3_rt = auto.arima(retail_trade_employment_ts)%>%
+  forecast(h = 36)
+
+autoplot(fit_1_rt)
+autoplot(fit_2_rt)
+autoplot (fit_3_rt)
+
+checkresiduals(fit_1_rt)
+checkresiduals(fit_2_rt)
+checkresiduals(fit_3_rt)
 ```
 
+```{r retail trade final model}
+final_model = fit_3_rt
+final_model_vis = autoplot(final_model) + aes(color = "#ED3833", labels = "Historical Data") +
+  ylim(200,800) +
+  #scales
+  scale_y_continuous(n.breaks = 10) +
+  scale_x_yearmon(n = 10) +
+  labs(x= "", 
+       y = "Employees (1000)", 
+       subtitle = "Employment for retail trade is expected to peak at around 16,080 thousand employees",
+       caption = "Forecasted using ARIMA(3,0,0)(2,0,0)[12] model. Data Retreived from FRED (CEU4200000001) on Nov 01, 2024") +
+    #positions of title
+  theme(text=element_text(family="Calibri"),
+        plot.title = element_blank(),
+    #plot caption
+        plot.caption.position =  "plot",
+        plot.caption = element_text(hjust = 0)) +
+  theme(panel.grid.major.y = element_line(color = "#DDD9C3"),
+        panel.background = element_blank())  +
+    
+    #remove background and tick marks and legend
+  theme(axis.ticks.y = element_blank(),
+        axis.line = element_line(color = "black", size = 0.75, linetype = "solid"),
+        legend.position = "none") +
+    #start period
+  annotate(geom = "point", x = 2024.917, y = 16060.43, colour = "red", size = 0.78)  
+
+ggsave('retail_trade_employement_us.png', width = 9.75, height = 4.75, units = "in")
+ #width = 39, height = 19, units = "in"
+```
+```{r rall employee data, echo =T}
+#model 2
+fit_1_ae = forecast::hw(all_employment_ts, seasonal = "multiplicative", damped =T, h = 12)
+fit_2_ae = forecast::hw(all_employment_ts, seasonal = "additive", damped = F, h = 12)
+fit_3_ae = auto.arima(all_employment_ts)%>%
+  forecast(h = 12)
+fit_4_ae = forecast::ets(all_employment_ts)%>%
+  forecast(h = 36)
+
+autoplot(fit_1_ae)
+autoplot(fit_2_ae)
+autoplot (fit_3_ae)
+autoplot (fit_4_ae)
+
+checkresiduals(fit_1_ae)
+checkresiduals(fit_2_ae)
+checkresiduals(fit_3_ae)
+```
+```{r retail all final model}
+final_model_all = fit_2_ae
+final_model_vis = autoplot(final_model_all) + aes(color = "#ED3833", labels = "Historical Data") +
+  #scales
+  scale_y_continuous(n.breaks = 10,limits = c(120000,170000)) +
+  scale_x_yearmon(n = 10) +
+  labs(x= "", 
+       y = "Employees (1000)", 
+       subtitle = "US employment market growth recovered and is projected to continue its expansion",
+       caption = "Forecasted using ARIMA(3,0,0)(2,0,0)[12] model. Data Retreived from FRED (CEU4200000001) on Nov 01, 2024") +
+    #positions of title
+  theme(text=element_text(family="Calibri"),
+        plot.title = element_blank(),
+    #plot caption
+        plot.caption.position =  "plot",
+        plot.caption = element_text(hjust = 0)) +
+  theme(panel.grid.major.y = element_line(color = "#DDD9C3"),
+        panel.background = element_blank())  +
+    
+    #remove background and tick marks and legend
+  theme(axis.ticks.y = element_blank(),
+        axis.line = element_line(color = "black", size = 0.75, linetype = "solid"),
+        legend.position = "none") +
+    #start period
+  annotate(geom = "point", x = 2024.917, y = 159184.0, colour = "red", size = 0.78)  
+
+ggsave('all_employement_us.png', width = 9.75, height = 4.75, units = "in")
+ #width = 39, height = 19, units = "in"
+```
 ## R Markdown
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 
 When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
 
 ## Including Plots
 
