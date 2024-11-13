@@ -67,11 +67,13 @@ dta %>%
 ```
 
 ```{r retail trade forecast data, echo =T}
+retail_trade_employment_ts_window = window(retail_trade_employment_ts, start = c(2010,1))
+
 #model 2
-fit_1_rt = forecast::hw(retail_trade_employment_ts, seasonal = "multiplicative", damped =T, h = 36)
-fit_2_rt = forecast::hw(retail_trade_employment_ts, seasonal = "additive", damped = T, h = 36)
-fit_3_rt = auto.arima(retail_trade_employment_ts)%>%
-  forecast(h = 36)
+fit_1_rt = forecast::hw(retail_trade_employment_ts_window, seasonal = "multiplicative", damped =T, h = 36)
+fit_2_rt = forecast::hw(retail_trade_employment_ts_window , seasonal = "additive", damped = T, h = 36)
+fit_3_rt = auto.arima(retail_trade_employment_ts_window )%>%
+  forecast(h = 12)
 
 autoplot(fit_1_rt)
 autoplot(fit_2_rt)
@@ -91,8 +93,8 @@ final_model_vis = autoplot(final_model) + aes(color = "#ED3833", labels = "Histo
   scale_x_yearmon(n = 10) +
   labs(x= "", 
        y = "Employees (1000)", 
-       subtitle = "Employment for retail trade is expected to peak at around 16,080 thousand employees",
-       caption = "Forecasted using ARIMA(3,0,0)(2,0,0)[12] model. Data Retreived from FRED (CEU4200000001) on Nov 01, 2024") +
+       subtitle = "Employment for retail trade is expected to peak at around 16.1 million employees each year.\nPositive trend and less volatile seasonality as time progress",
+       caption = "Forecasted using ARIMA(0,1,2)(2,1,0)[12] model. Data Retreived from FRED (CEU4200000001) on Nov 01, 2024") +
     #positions of title
   theme(text=element_text(family="Calibri"),
         plot.title = element_blank(),
@@ -107,19 +109,25 @@ final_model_vis = autoplot(final_model) + aes(color = "#ED3833", labels = "Histo
         axis.line = element_line(color = "black", size = 0.75, linetype = "solid"),
         legend.position = "none") +
     #start period
-  annotate(geom = "point", x = 2024.917, y = 16060.43, colour = "red", size = 0.78)  
+  annotate(geom = "point", x = 2024.917, y = 16098.07, colour = "red", size = 0.78)  
 
 ggsave('retail_trade_employement_us.png', width = 9.75, height = 4.75, units = "in")
  #width = 39, height = 19, units = "in"
 ```
 ```{r rall employee data, echo =T}
+fit_0_ae = forecast::hw(all_employment_ts, seasonal = "additive", damped = T, h = 14)
+
+#subset for a smaller window due to previous model doesnt yield best result
+all_employment_ts_window = window(all_employment_ts, start = c(2010,1))
+
+
 #model 2
-fit_1_ae = forecast::hw(all_employment_ts, seasonal = "multiplicative", damped =T, h = 12)
-fit_2_ae = forecast::hw(all_employment_ts, seasonal = "additive", damped = F, h = 12)
-fit_3_ae = auto.arima(all_employment_ts)%>%
+fit_1_ae = forecast::hw(all_employment_ts_window, seasonal = "multiplicative", damped =T, h = 14)
+fit_2_ae = forecast::hw(all_employment_ts_window, seasonal = "additive", damped = T, h = 14)
+fit_3_ae = auto.arima(all_employment_ts_window)%>%
+  forecast(h = 14)
+fit_4_ae = forecast::ets(all_employment_ts_window)%>%
   forecast(h = 12)
-fit_4_ae = forecast::ets(all_employment_ts)%>%
-  forecast(h = 36)
 
 autoplot(fit_1_ae)
 autoplot(fit_2_ae)
@@ -129,17 +137,19 @@ autoplot (fit_4_ae)
 checkresiduals(fit_1_ae)
 checkresiduals(fit_2_ae)
 checkresiduals(fit_3_ae)
+checkresiduals(fit_4_ae)
 ```
 ```{r retail all final model}
-final_model_all = fit_2_ae
+final_model_all = fit_4_ae
 final_model_vis = autoplot(final_model_all) + aes(color = "#ED3833", labels = "Historical Data") +
+  annotate(geom = "point", x = 2024.833, y = 158293.2, colour = "red", size = 0.78)  +
+  annotate(geom = "point", x = 2025.750, y = 162291.2, colour = "red", size = 0.78) +
   #scales
-  scale_y_continuous(n.breaks = 10,limits = c(120000,170000)) +
   scale_x_yearmon(n = 10) +
   labs(x= "", 
        y = "Employees (1000)", 
-       subtitle = "US employment market growth recovered and is projected to continue its expansion",
-       caption = "Forecasted using ARIMA(3,0,0)(2,0,0)[12] model. Data Retreived from FRED (CEU4200000001) on Nov 01, 2024") +
+       subtitle = "US employment market growth recovered and is projected to continue its expansion.\nEmployment is forecasted to grow by 2% by 2025 Q4",
+       caption = "Forecasted using ETS method with Multiplicative error, Additive trend and season. Data Retreived from FRED (PAYNSA) on Nov 01, 2024") +
     #positions of title
   theme(text=element_text(family="Calibri"),
         plot.title = element_blank(),
@@ -152,10 +162,7 @@ final_model_vis = autoplot(final_model_all) + aes(color = "#ED3833", labels = "H
     #remove background and tick marks and legend
   theme(axis.ticks.y = element_blank(),
         axis.line = element_line(color = "black", size = 0.75, linetype = "solid"),
-        legend.position = "none") +
-    #start period
-  annotate(geom = "point", x = 2024.917, y = 159184.0, colour = "red", size = 0.78)  
-
+        legend.position = "none")
 ggsave('all_employement_us.png', width = 9.75, height = 4.75, units = "in")
  #width = 39, height = 19, units = "in"
 ```
