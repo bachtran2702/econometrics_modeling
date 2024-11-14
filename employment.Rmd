@@ -176,8 +176,28 @@ When you click the **Knit** button a document will be generated that includes bo
 
 You can also embed plots, for example:
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+```{r rall new test all employment, echo =T}
+fit_5_ae = forecast::hw(all_employment_ts, seasonal = "additive", damped = T, h = 14)
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+#subset for a smaller window due to previous model doesnt yield best result
+all_employment_ts_window = window(all_employment_ts, start = c(2010,1))
+
+
+#model 2
+fit_6_ae = forecast::hw(all_employment_ts_window, seasonal = "multiplicative", damped =T, h = 14)
+fit_7_ae = forecast::hw(all_employment_ts_window, seasonal = "additive", damped = T, h = 14)
+fit_8_ae = auto.arima(all_employment_ts_window)%>%
+  forecast(h = 14)
+fit_9_ae = forecast::ets(all_employment_ts_window)%>%
+  forecast(h = 12)
+
+autoplot(fit_6_ae)
+autoplot(fit_7_ae)
+autoplot (fit_8_ae)
+autoplot (fit_9_ae)
+
+checkresiduals(fit_6_ae)
+checkresiduals(fit_7_ae)
+checkresiduals(fit_8_ae)
+checkresiduals(fit_9_ae)
+```
