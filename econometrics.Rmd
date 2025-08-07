@@ -199,17 +199,15 @@ forecast_graph = vis_model + aes(color = "#ED3833", labels = "Historical Data") 
         axis.line = element_line(color = "black", size = 0.75, linetype = "solid"),
         legend.position = "none") +
   #start period
-  annotate(geom = "point", x = 75, y = 575.7267, colour = "red", size = 1.5) +
-  annotate(geom = "text", x = 75, y = 575.7267, label = "$575.73", hjust = 1.2, size = 3.3) +
-  annotate(geom = "point", x = 87, y = 658.7358, colour = "red", size = 1.5) +
-  annotate(geom = "text", x = 87, y = 658.7358, label = "$658.74", vjust = -1.8, size = 3.3) 
+  annotate(geom = "point", x = 75, y = 560.2852, colour = "red", size = 1.5) +
+  annotate(geom = "text", x = 75, y = 560.2852, label = "$560.29", hjust = 1.2, size = 3.3) +
+  annotate(geom = "point", x = 87, y = 639.2752, colour = "red", size = 1.5) +
+  annotate(geom = "text", x = 87, y = 639.2752, label = "$639.28", vjust = -1.8, size = 3.3) 
 ggsave('graph.png', width = 9.75, height = 4.75, units = "in")
+ #width = 39, height = 19, units = "in"
+
+ggsave('SP_500_forecast.png', width = 9.75, height = 4.75, units = "in")
  #width = 39, height = 19, units = "in"
 ```
 
 
-
-## Including Plots
-
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
